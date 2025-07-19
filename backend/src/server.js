@@ -101,6 +101,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static files - serve uploaded images
 const path = require('path');
 const uploadsDir = path.join(__dirname, '..', 'uploads');
+// Add CORS headers for static file responses
+app.use('/backend/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+}, express.static(uploadsDir));
 app.use('/app/uploads', express.static(uploadsDir));
 
 

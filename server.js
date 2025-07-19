@@ -17,6 +17,8 @@ const setCors = (proxyRes, req) => {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Serve static files from backend/uploads for /backend/uploads route
+app.use('/backend/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
 // Serve static files from SakthiAdmin/build in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'SakthiAdmin/build')));

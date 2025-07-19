@@ -93,6 +93,7 @@ const AdminIdeasDashboard = () => {
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [departments, setDepartments] = useState([]);
+  const [fullscreenImage, setFullscreenImage] = useState(null); // Add this state
 
   // Move fetchStats outside useEffect so it can be called after status update
   const fetchStats = async () => {
@@ -469,10 +470,11 @@ const AdminIdeasDashboard = () => {
                             {selectedIdea.images.map((img, idx) => (
                               <div key={idx} className="border rounded-lg p-2 bg-white shadow-sm">
                                 <img
-                                  src={`http://localhost:3001/app/uploads/${img.filename}`}
+                                  src={`http://localhost:5000/backend/uploads/${img.filename}`}
                                   alt={img.originalName || `Idea Image ${idx + 1}`}
-                                  className="w-32 h-32 object-cover rounded mb-1"
+                                  className="w-32 h-32 object-cover rounded mb-1 cursor-pointer"
                                   style={{ maxWidth: '128px', maxHeight: '128px' }}
+                                  onClick={() => setFullscreenImage(img)} // Set fullscreen image on click
                                 />
                                 <div className="text-sm text-gray-600 truncate max-w-[120px]" title={img.originalName}>{img.originalName}</div>
                               </div>
@@ -633,6 +635,27 @@ const AdminIdeasDashboard = () => {
             </div>
           )}
         </>
+      )}
+      {/* Fullscreen Image Overlay */}
+      {fullscreenImage && (
+        <div className="fixed inset-0 z-[100] bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="relative bg-background rounded-lg shadow-2xl p-4 max-w-3xl w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+            <img
+              src={`http://localhost:5000/backend/uploads/${fullscreenImage.filename}`}
+              alt={fullscreenImage.originalName || 'Full Image'}
+              className="max-w-full max-h-[65vh] rounded"
+              style={{ objectFit: 'contain' }}
+            />
+            <div className="mt-2 text-center text-gray-700 text-sm truncate w-full" title={fullscreenImage.originalName}>{fullscreenImage.originalName}</div>
+            <button
+              className="absolute top-2 right-2 text-gray-700 text-2xl font-bold bg-white bg-opacity-80 rounded-full px-2 py-0.5 hover:bg-opacity-100 focus:outline-none shadow"
+              onClick={() => setFullscreenImage(null)}
+              aria-label="Close Fullscreen"
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
