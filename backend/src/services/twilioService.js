@@ -36,7 +36,7 @@ async function checkVerification({ to, code }) {
 
 if (require.main === module) {
   const readline = require('readline');
-  const testNumber = "+919095145230";
+
   sendVerification({ to: testNumber })
     .then(verification => {
       console.log('Verification sent! SID:', verification.sid);

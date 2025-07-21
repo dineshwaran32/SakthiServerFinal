@@ -24,31 +24,10 @@ const PORT = process.env.PORT || 3002; // Changed from 5001 to 3002 for proxy se
 app.use('/app/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Middleware
-// CORS configuration for development
-const allowedOrigins = [
-  'http://localhost:5000',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174'
-];
-
+// CORS configuration for development - allow all origins on LAN/dev
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `CORS policy: ${origin} not allowed`;
-      console.warn(msg);
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: true, // reflect request origin
+
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

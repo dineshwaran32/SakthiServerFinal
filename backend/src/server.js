@@ -69,7 +69,7 @@ app.use(helmet());
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:5000', 'http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:5173'],
+  origin: true, // reflect origin for dev, allows LAN access
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Debug-Request', 'Accept', 'X-Requested-With'],
