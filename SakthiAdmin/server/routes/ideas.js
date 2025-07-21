@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import { authenticateToken, requireAdminOrReviewer } from '../middleware/auth.js';
 import exceljs from 'exceljs';
 import Notification from '../models/Notification.js';
+import twilioService from '../twilioadminService.js';
 
 const router = express.Router();
 
@@ -208,6 +209,18 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.patch('/:id/status', authenticateToken, requireAdminOrReviewer, async (req, res) => {
   try {
     const { status, reviewComments, priority } = req.body;
+
+    // Add role-based status validation
+    if (req.user.role === 'reviewer') {
+      // Reviewers can only set status to approved or rejected
+      if (!['approved', 'rejected'].includes(status)) {
+        return res.status(403).json({ 
+          message: 'Reviewers can only set status to approved or rejected'
+        });
+      }
+    }
+    // Admins can set any status (no restrictions needed)
+
     const updateData = {
       status,
       reviewedBy: req.user.name,
@@ -242,19 +255,19 @@ router.patch('/:id/status', authenticateToken, requireAdminOrReviewer, async (re
       notifTitle = `Idea Status Updated: ${idea.title}`;
       notifMsg = `The status of the idea "${idea.title}" has changed to ${status}.`;
       // Notify Admins only
-      const admins = await User.find({ role: 'admin', isActive: true });
+      const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     } else if (status === 'approved') {
       notifType = 'idea_approved';
       notifTitle = `Idea Status Updated: ${idea.title}`;
       notifMsg = `The status of the idea "${idea.title}" has changed to approved.`;
-      const admins = await User.find({ role: 'admin', isActive: true });
+      const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     } else if (status === 'implemented') {
       notifType = 'idea_implemented';
       notifTitle = `Idea Status Updated: ${idea.title}`;
       notifMsg = `The status of the idea "${idea.title}" has changed to implemented.`;
-      const admins = await User.find({ role: 'admin', isActive: true });
+      const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     }
     // Create notifications
@@ -269,6 +282,18 @@ router.patch('/:id/status', authenticateToken, requireAdminOrReviewer, async (re
         isRead: false,
         priority: 'medium'
       });
+
+      // Send SMS to admin if they have a mobile number
+      if (user.mobileNumber) {
+        try {
+          await twilioService.customMessage(
+            user.mobileNumber,
+            `Status Update: The idea "${idea.title}" has been changed to ${status}.`
+          );
+        } catch (smsErr) {
+          console.error(`Failed to send SMS to admin ${user.name}:`, smsErr);
+        }
+      }
     }
 
     res.json(idea);
@@ -309,6 +334,17 @@ router.patch('/:id/assign-reviewer', authenticateToken, requireAdminOrReviewer, 
         isRead: false,
         priority: 'medium'
       });
+      // Send SMS notification to reviewer
+      if (reviewer.mobileNumber) {
+        try {
+          await twilioService.customMessage(
+            reviewer.mobileNumber,
+            `You have been assigned a new idea to review: "${idea.title} by admin"`
+          );
+        } catch (smsErr) {
+          console.error('Failed to send SMS to reviewer:', smsErr);
+        }
+      }
     }
     res.json(idea);
   } catch (error) {

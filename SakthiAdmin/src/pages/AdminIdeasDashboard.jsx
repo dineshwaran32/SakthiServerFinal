@@ -470,7 +470,7 @@ const AdminIdeasDashboard = () => {
                             {selectedIdea.images.map((img, idx) => (
                               <div key={idx} className="border rounded-lg p-2 bg-white shadow-sm">
                                 <img
-                                  src={`http://localhost:5000/backend/uploads/${img.filename}`}
+                                  src={`http://localhost:3000/backend/uploads/${img.filename}`}
                                   alt={img.originalName || `Idea Image ${idx + 1}`}
                                   className="w-32 h-32 object-cover rounded mb-1 cursor-pointer"
                                   style={{ maxWidth: '128px', maxHeight: '128px' }}
@@ -522,7 +522,11 @@ const AdminIdeasDashboard = () => {
                                 <span className="ml-2">▼</span>
                               </Listbox.Button>
                               <Listbox.Options className="absolute mt-1 w-full bg-secondaryContainer rounded-lg shadow-lg z-10">
-                                {statusOptions.map(option => (
+                                {/* Only show 'approved' and 'rejected' for reviewers, all for admins */}
+                                {(isAdmin
+                                  ? statusOptions
+                                  : statusOptions.filter(option => ['approved', 'rejected'].includes(option.value))
+                                ).map(option => (
                                   <Listbox.Option
                                     key={option.value}
                                     value={option.value}
@@ -661,4 +665,4 @@ const AdminIdeasDashboard = () => {
   );
 };
 
-export default AdminIdeasDashboard; 
+export default AdminIdeasDashboard;

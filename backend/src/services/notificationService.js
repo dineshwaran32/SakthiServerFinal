@@ -1,6 +1,8 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const Idea = require('../models/Idea');
+const { sendSMS } = require('./twilioService');
+
 
 class NotificationService {
   // Create a single notification
@@ -54,7 +56,7 @@ class NotificationService {
     console.log('🔍 [DEBUG] All users in database:', JSON.stringify(allUsers, null, 2));
     
     // Now find just the admins
-    const admins = await User.find(adminQuery).select('_id name email role employeeNumber');
+    const admins = await User.find(adminQuery).select('_id name email role employeeNumber mobileNumber');
     
     console.log(`🔍 [DEBUG] Found ${admins.length} admin users:`, 
       JSON.stringify(admins.map(a => ({
@@ -62,7 +64,8 @@ class NotificationService {
         name: a.name,
         email: a.email,
         role: a.role,
-        employeeNumber: a.employeeNumber
+        employeeNumber: a.employeeNumber,
+        mobileNumber: a.mobileNumber
       })), null, 2)
     );
     
@@ -94,7 +97,24 @@ class NotificationService {
     });
 
     console.log('💾 [DEBUG] Saving notifications to database...');
+
+
     const result = await this.createMultipleNotifications(notifications);
+    
+    for (const admin of admins) {
+      console.log(`[SMS SENDER] Checking admin ${admin.name}. Mobile number found: ${admin.mobileNumber || 'No'}`);
+      if (admin.mobileNumber) {
+        const smsMessage = `new idea submitted "${idea.title}" submitted by "${submitter.name}" from department "${submitter.department || 'unknown department'}"`;
+        try {
+          await sendSMS({ to: admin.mobileNumber, message: smsMessage });
+          console.log(`✅ SMS sent to admin ${admin.name} (${admin.mobileNumber})`);
+        } catch (smsErr) {
+          console.error(`❌ Failed to send SMS to admin ${admin.name} (${admin.mobileNumber}):`, smsErr.message);
+        }
+      } else {
+        console.log(`[SMS SENDER] No mobile number for admin ${admin.name}. Skipping SMS.`);
+      }
+    }
     console.log('✅ [DEBUG] Notifications created successfully:', 
       JSON.stringify({
         count: result.length,

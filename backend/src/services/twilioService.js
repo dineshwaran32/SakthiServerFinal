@@ -34,9 +34,25 @@ async function checkVerification({ to, code }) {
   }
 }
 
+// Custom SMS sending function
+async function sendSMS({ to, message }) {
+  const from = process.env.TWILIO_PHONE_NUMBER;
+  if (!from) throw new Error('TWILIO_PHONE_NUMBER is not set in .env');
+  try {
+    const sms = await client.messages.create({
+      body: message,
+      from,
+      to
+    });
+    return sms;
+  } catch (error) {
+    throw error;
+  }
+}
+
 if (require.main === module) {
   const readline = require('readline');
-
+  const testNumber = "+919095145230";
   sendVerification({ to: testNumber })
     .then(verification => {
       console.log('Verification sent! SID:', verification.sid);
@@ -68,5 +84,6 @@ if (require.main === module) {
 
 module.exports = { 
   sendVerification,
-  checkVerification
-}; 
+  checkVerification,
+  sendSMS
+};
