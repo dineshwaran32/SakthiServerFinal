@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3002; // Changed from 5001 to 3002 for proxy setup
 
+// Serve static files from the React build directory
+app.use(express.static(path.join(__dirname, '..', 'dist')));
+
 // Serve static files from the uploads directory
 app.use('/app/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
@@ -81,64 +84,6 @@ const setupRoutes = () => {
     app.use('/api/admin/reviewers', reviewerRoutes);
     app.use('/api/admin/users', usersRoutes);
     console.log('✅ API routes mounted');
-  } else {
-    // Mock routes for development without database
-    app.get('/api/admin/auth/me', (req, res) => {
-      res.json({
-        user: {
-          id: 'mock-user-id',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          role: 'admin'
-        }
-      });
-    });
-    
-    app.post('/api/admin/auth/login', (req, res) => {
-      console.log('Login request received:', req.body);
-      const { employeeNumber, password } = req.body;
-      // For demo, allow only EMP001 and password 1234
-      if (employeeNumber === 'EMP001' && password === '1234') {
-        console.log('Employee login successful');
-        res.json({
-          token: 'mock-jwt-token',
-          user: {
-            id: 'mock-employee-id',
-            name: 'John Doe',
-            employeeNumber: 'EMP001',
-            role: 'employee'
-          }
-        });
-      } else {
-        console.log('Login failed - invalid credentials');
-        res.status(401).json({ message: 'Invalid credentials' });
-      }
-    });
-
-    // Mock other routes
-    app.get('/api/admin/ideas', (req, res) => {
-      res.json({
-        ideas: [],
-        total: 0,
-        departments: [],
-        statuses: ['under_review', 'ongoing', 'approved', 'implemented', 'rejected'],
-        priorities: ['low', 'medium', 'high', 'urgent'],
-        totalPages: 0,
-        currentPage: 1
-      });
-    });
-
-    app.get('/api/admin/employees', (req, res) => {
-      res.json({
-        employees: [],
-        total: 0,
-        departments: [],
-        totalPages: 0,
-        currentPage: 1
-      });
-    });
-
-    console.log('⚠️  Mock routes mounted (no database connection)');
   }
 };
 
@@ -153,6 +98,11 @@ const initializeApp = async () => {
     res.status(500).json({ message: 'Something went wrong!' });
   });
 
+  // Add this after all other routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  });
+  
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 SakthiAdmin server running on port ${PORT}`);
     console.log(`🔗 API will be available at: http://localhost:${PORT}/api`);
