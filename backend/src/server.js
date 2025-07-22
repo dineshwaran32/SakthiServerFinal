@@ -126,6 +126,16 @@ app.use('/app/api/ideas', ideaRoutes);
 app.use('/app/api/users', userRoutes);
 app.use('/app/api/notifications', notificationRoutes);
 
+// ===================== Frontend Static Files =====================
+// Build the React/Vite app first (npm run build in SakthiAdmin) which outputs the dist folder.
+const frontEndPath = path.join(__dirname, '..', '..', 'SakthiAdmin', 'dist');
+app.use(express.static(frontEndPath));
+
+// For any non-API GET request, return the SPA's index.html so that client-side routing works.
+app.get(/^\/(?!app\/api).*$/, (req, res) => {
+  res.sendFile(path.join(frontEndPath, 'index.html'));
+});
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -145,7 +155,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
+// Listen on port env.PORT or fallback to 80 so both frontend and backend share the same port.
+const PORT = process.env.PORT || 80;
 
 app.listen(PORT,"0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
