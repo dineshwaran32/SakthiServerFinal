@@ -58,7 +58,7 @@ const Login = () => {
             <Lock className="h-8 w-8 text-onPrimary" />
           </div>
           <h2 className="mt-6 text-4xl font-bold text-onSurface">
-            Welcome Back
+            Sakthi Spark
           </h2>
           <p className="mt-2 text-base text-onSurfaceVariant">
             Sign in to your Admin & Reviewer Portal
@@ -152,14 +152,14 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Demo Credentials */}
+          {/* Demo Credentials
           <div className="mt-6 p-4 bg-primary-container border border-primary rounded-lg">
             <h4 className="text-base font-medium text-primary mb-2">Demo Credentials</h4>
             <div className="text-sm text-primary space-y-1">
               <p><strong>Admin:</strong> admin@example.com / admin123</p>
               <p><strong>Reviewer:</strong> reviewer@example.com / reviewer123</p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

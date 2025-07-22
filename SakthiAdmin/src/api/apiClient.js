@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000', // Proxy server URL
+  baseURL: 'http://10.128.109.152:3002', // Proxy server URL
   headers: {
     'Content-Type': 'application/json',
   },
