@@ -100,14 +100,14 @@ const Leaderboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-onPrimary">Employee Leaderboard</h1>
-          <p className="mt-1 text-base text-onPrimary">
+          <h1 className="text-2xl sm:text-3xl font-bold text-onPrimary">Employee Leaderboard</h1>
+          <p className="mt-1 text-sm sm:text-base text-onPrimary">
             Rankings based on credit points earned from idea submissions
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 flex space-x-3">
+        <div className="mt-2 sm:mt-0 flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={handleExport}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -126,8 +126,8 @@ const Leaderboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-secondary-container rounded-lg shadow-sm border border-background p-4 print:hidden">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="bg-secondary-container rounded-lg shadow-sm border border-background p-2 sm:p-4 print:hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -158,14 +158,12 @@ const Leaderboard = () => {
 
       {/* Top 3 Podium */}
       {employees.length >= 3 && (
-        // <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 print:bg-white print:border">
         <div>
-
-          <h2 className="text-2xl text-primary font-bold text-center text-gray-900 mb-8 ">Top Performers</h2>
-          <div className="flex justify-center items-end space-x-8">
+          <h2 className="text-xl sm:text-2xl text-primary font-bold text-center text-gray-900 mb-4 sm:mb-8 ">Top Performers</h2>
+          <div className="flex flex-col sm:flex-row justify-center items-center sm:items-end sm:space-x-8 gap-4 sm:gap-0 w-full">
             {/* Second Place */}
-            <div className="text-center ">
-              <div className="w-20 h-24 bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-lg">
+            <div className="text-center w-full max-w-xs">
+              <div className="w-20 h-24 mx-auto bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-lg">
                 <Medal className="h-10 w-10 text-white" />
               </div>
               <div className="bg-secondary-container rounded-lg p-4 shadow-md min-w-[120px] text-center">
@@ -178,8 +176,8 @@ const Leaderboard = () => {
             </div>
 
             {/* First Place */}
-            <div className="text-center">
-              <div className="w-24 h-32 bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-xl">
+            <div className="text-center w-full max-w-xs">
+              <div className="w-24 h-32 mx-auto bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-xl">
                 <Trophy className="h-12 w-12 text-white" />
               </div>
               <div className="bg-secondary-container rounded-lg p-4 shadow-lg min-w-[120px] border-2 border-primary">
@@ -192,8 +190,8 @@ const Leaderboard = () => {
             </div>
 
             {/* Third Place */}
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-lg">
+            <div className="text-center w-full max-w-xs">
+              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-primary to-tertiary rounded-lg flex items-center justify-center mb-4 shadow-lg">
                 <Award className="h-10 w-10 text-white" />
               </div>
               <div className="bg-secondary-container rounded-lg p-4 shadow-md min-w-[120px]">
@@ -209,28 +207,27 @@ const Leaderboard = () => {
       )}
 
       {/* Full Leaderboard Table */}
-      <div className="bg-secondary-container rounded-lg shadow-sm border border-background overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-surface">Complete Rankings</h2>
+      <div className="bg-secondary-container rounded-lg shadow-sm border border-background overflow-x-auto pb-4 relative">
+        <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-surface">Complete Rankings</h2>
         </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 ">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 pb-4">
+          <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm ">
             <thead className="bg-secondaryContainer">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Employee
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Department
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Credit Points
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">
                   Employee ID
                 </th>
               </tr>
@@ -240,33 +237,33 @@ const Leaderboard = () => {
                 const rank = index + 1;
                 return (
                   <tr key={employee._id} className={rank <= 3 ? 'bg-yellow-50' : 'hover:bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold ${getRankBadge(rank)}`}>
                           {rank <= 3 ? getRankIcon(rank) : rank}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {/* Placeholder for avatar */}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-base font-medium text-gray-900">{employee.name}</div>
-                          <div className="text-sm text-gray-500">{employee.email}</div>
+                        <div className="ml-2 sm:ml-4">
+                          <div className="text-xs sm:text-base font-medium text-gray-900">{employee.name}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{employee.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-base text-gray-900">{employee.department}</div>
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-base text-gray-900">{employee.department}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-base leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs sm:text-base leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                         {employee.creditPoints}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
+                    <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-base text-gray-500">
                       {employee.employeeNumber}
                     </td>
                   </tr>
@@ -275,6 +272,9 @@ const Leaderboard = () => {
             </tbody>
           </table>
         </div>
+        {/* Mobile swipe hint and right fade */}
+        <div className="block sm:hidden text-center text-xs text-gray-400 mt-2">Swipe left/right to see more &rarr;</div>
+        <div className="pointer-events-none absolute top-0 right-0 h-full w-6 bg-gradient-to-l from-secondary-container to-transparent hidden sm:block" />
       </div>
 
       {employees.length === 0 && (

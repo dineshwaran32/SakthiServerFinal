@@ -24,6 +24,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { name, email, password, role = 'reviewer' } = req.body;
 
+    // Password is required for reviewers, not for employees
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
@@ -33,6 +34,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
+    // Password will be hashed by the User model pre-save hook
     const user = new User({ name, email, password, role });
     await user.save();
 
@@ -42,6 +44,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
       email: user.email,
       role: user.role,
       createdAt: user.createdAt
+      // password is not returned
     });
   } catch (error) {
     console.error('Create reviewer error:', error);

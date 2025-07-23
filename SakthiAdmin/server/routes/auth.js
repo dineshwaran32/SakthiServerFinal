@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -15,15 +16,22 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Employee number and password are required' });
     }
 
-    console.log('Looking for:', employeeNumber);
     const user = await User.findOne({ employeeNumber, isActive: true });
-    console.log('User found:', user);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    if (password !== '1234') {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // Only allow login for admin and reviewer
+    if (user.role === 'employee') {
+      return res.status(401).json({ message: 'Login not allowed for employees' });
+    }
+
+    // Password check logic
+    if (user.role === 'admin' || user.role === 'reviewer') {
+      const isMatch = await bcrypt.compare(password, user.password || '');
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
     }
 
     const token = jwt.sign(

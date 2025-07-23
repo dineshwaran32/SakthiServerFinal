@@ -49,8 +49,11 @@ const EmployeeManagement = () => {
     name: '',
     email: '',
     department: '',
+    designation: '',
     mobileNumber: '',
-    creditPoints: 0
+    creditPoints: 0,
+    password: '',
+    role: 'employee' // Add role to form state
   });
 
   // Import states
@@ -114,7 +117,12 @@ const EmployeeManagement = () => {
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiClient.post('/api/admin/employees', employeeForm);
+      // Only include password if provided and role is admin or reviewer
+      const payload = { ...employeeForm };
+      if (!payload.password || (payload.role !== 'admin' && payload.role !== 'reviewer')) {
+        delete payload.password;
+      }
+      const response = await apiClient.post('/api/admin/employees', payload);
       setEmployees(prev => [response.data, ...prev]);
       setShowAddModal(false);
       resetForm();
@@ -127,7 +135,12 @@ const EmployeeManagement = () => {
   const handleEditEmployee = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiClient.put(`/api/admin/users/${selectedEmployee._id}`, employeeForm);
+      // Only include password if provided and role is admin or reviewer
+      const payload = { ...employeeForm };
+      if (!payload.password || (payload.role !== 'admin' && payload.role !== 'reviewer')) {
+        delete payload.password;
+      }
+      const response = await apiClient.put(`/api/admin/users/${selectedEmployee._id}`, payload);
       setEmployees(prev => prev.map(emp => 
         emp._id === selectedEmployee._id ? response.data : emp
       ));
@@ -327,7 +340,9 @@ const EmployeeManagement = () => {
       department: employee.department,
       mobileNumber: employee.mobileNumber || '',
       creditPoints: employee.creditPoints,
-      designation: employee.designation || ''
+      designation: employee.designation || '',
+      password: '', // Clear password when opening edit modal
+      role: employee.role || 'employee' // Set role in edit modal
     });
     setShowEditModal(true);
   };
@@ -357,7 +372,7 @@ const EmployeeManagement = () => {
     <div className="space-y-6">
       {/* Alert */}
       {alert.show && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${
+        <div className={`fixed top-2 right-2 sm:top-4 sm:right-4 z-50 p-2 sm:p-4 rounded-lg shadow-lg border ${
           alert.type === 'success' 
             ? 'bg-green-50 border-green-200 text-green-800' 
             : 'bg-red-50 border-red-200 text-red-800'
@@ -380,12 +395,12 @@ const EmployeeManagement = () => {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-onPrimary">Employee Management</h1>
-          <p className="mt-1 text-base text-onPrimary">Manage employee data</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-onPrimary">Employee Management</h1>
+          <p className="mt-1 text-sm sm:text-base text-onPrimary">Manage employee data</p>
         </div>
-        <div className="mt-4 sm:mt-0 flex flex-wrap gap-3">
+        <div className="mt-2 sm:mt-0 flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => setShowImportModal(true)}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -418,7 +433,7 @@ const EmployeeManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
         <div className="bg-secondaryContainer rounded-lg shadow-sm border border-background p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -469,8 +484,8 @@ const EmployeeManagement = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-secondary-container rounded-lg shadow-sm border border-background p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-secondary-container rounded-lg shadow-sm border border-background p-2 sm:p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -534,7 +549,7 @@ const EmployeeManagement = () => {
       </div>
 
       {/* Employee Table */}
-      <div className="bg-secondaryContainer rounded-lg shadow-sm border border-background overflow-hidden">
+      <div className="bg-secondaryContainer rounded-lg shadow-sm border border-background overflow-x-auto">
         <div className="px-6 py-4 border-b border-background">
           <h2 className="text-lg font-semibold text-gray-900">Employee Directory</h2>
         </div>
@@ -546,7 +561,7 @@ const EmployeeManagement = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-background">
+            <table className="min-w-full divide-y divide-background text-xs sm:text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -701,8 +716,14 @@ const EmployeeManagement = () => {
 
       {/* Add Employee Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-full sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Add New Employee</h2>
@@ -808,6 +829,35 @@ const EmployeeManagement = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Password (optional, for admin/reviewer)
+                  </label>
+                  <input
+                    type="password"
+                    value={employeeForm.password}
+                    onChange={(e) => setEmployeeForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter password (admin/reviewer only)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Role *
+                  </label>
+                  <select
+                    required
+                    value={employeeForm.role}
+                    onChange={e => setEmployeeForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="employee">Employee</option>
+                    <option value="reviewer">Reviewer</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -832,8 +882,14 @@ const EmployeeManagement = () => {
 
       {/* Edit Employee Modal */}
       {showEditModal && selectedEmployee && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-full sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Edit Employee</h2>
@@ -932,6 +988,35 @@ const EmployeeManagement = () => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Password (optional, for admin/reviewer)
+                  </label>
+                  <input
+                    type="password"
+                    value={employeeForm.password}
+                    onChange={(e) => setEmployeeForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter password (admin/reviewer only)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-medium text-gray-700 mb-2">
+                    Role *
+                  </label>
+                  <select
+                    required
+                    value={employeeForm.role}
+                    onChange={e => setEmployeeForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="employee">Employee</option>
+                    <option value="reviewer">Reviewer</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -956,8 +1041,8 @@ const EmployeeManagement = () => {
 
       {/* Import Modal */}
       {showImportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg max-w-full sm:max-w-lg w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Import Employees</h2>
@@ -1052,8 +1137,8 @@ const EmployeeManagement = () => {
 
       {/* Bulk Delete Modal */}
       {showBulkDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg max-w-full sm:max-w-lg w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-red-900">Bulk Delete Employees</h2>

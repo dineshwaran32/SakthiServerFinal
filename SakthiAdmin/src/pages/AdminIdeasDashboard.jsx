@@ -216,10 +216,10 @@ const AdminIdeasDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-onPrimary">Ideas Dashboard</h1>
-          <p className="mt-1 text-base text-onPrimary">Overview of idea submissions and statuses</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-onPrimary">Ideas Dashboard</h1>
+          <p className="mt-1 text-sm sm:text-base text-onPrimary">Overview of idea submissions and statuses</p>
         </div>
       </div>
       {loading ? (
@@ -231,7 +231,7 @@ const AdminIdeasDashboard = () => {
         <div className="text-red-600 text-center">{error}</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6">
             {statusCards.map(card => {
               const Icon = card.icon;
               let value = 0;
@@ -268,7 +268,7 @@ const AdminIdeasDashboard = () => {
 
           {/* Filters and Refresh */}
           <div className="bg-secondary-container rounded-lg shadow-sm border border-background p-4 mb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 items-center">
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -337,7 +337,7 @@ const AdminIdeasDashboard = () => {
           </div>
 
           {/* Idea Directory Table */}
-          <div className="bg-secondaryContainer rounded-lg shadow-sm border border-background overflow-hidden mt-8">
+          <div className="bg-secondaryContainer rounded-lg shadow-sm border border-background overflow-x-auto mt-8">
             <div className="px-6 py-4 border-b border-background">
               <h2 className="text-xl font-semibold text-gray-900">Idea Directory</h2>
             </div>
@@ -350,7 +350,7 @@ const AdminIdeasDashboard = () => {
               <div className="text-red-600 text-center">{ideasError}</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-background">
+                <table className="min-w-full divide-y divide-background text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Idea</th>
@@ -419,8 +419,8 @@ const AdminIdeasDashboard = () => {
 
           {/* Idea Detail Modal */}
           {showModal && selectedIdea && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+              <div className="bg-background rounded-lg max-w-full sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6 ">
                   {/* Modal Header */}
                   <div className="flex items-center justify-between mb-6">
@@ -434,7 +434,7 @@ const AdminIdeasDashboard = () => {
                   </div>
 
                   {/* Idea Information */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     {/* Left Column */}
                     <div className="space-y-4">
                       <div>
@@ -642,8 +642,8 @@ const AdminIdeasDashboard = () => {
       )}
       {/* Fullscreen Image Overlay */}
       {fullscreenImage && (
-        <div className="fixed inset-0 z-[100] bg-black bg-opacity-70 flex items-center justify-center">
-          <div className="relative bg-background rounded-lg shadow-2xl p-4 max-w-3xl w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] bg-black bg-opacity-70 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative bg-background rounded-lg shadow-2xl p-2 sm:p-4 max-w-full sm:max-w-3xl w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
             <img
               src={`http://localhost:5000/backend/uploads/${fullscreenImage.filename}`}
               alt={fullscreenImage.originalName || 'Full Image'}

@@ -50,12 +50,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-logincontainer to-tertiary flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Lock className="h-8 w-8 text-onPrimary" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-white to-white rounded-2xl flex items-center justify-center shadow-lg">
+            <Lock className="h-8 w-8 text-primary" />
           </div>
           <h2 className="mt-6 text-4xl font-bold text-onSurface">
             Sakthi Spark
@@ -67,12 +67,13 @@ const Login = () => {
 
         {/* Login Form */}
         <div className="bg-surface rounded-2xl shadow-xl p-8 space-y-6">
+          {(() => { if (error) console.log('Login error value:', error); return null; })()}
           {error && (
-            <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 flex items-start space-x-3">
+            <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 flex items-start space-x-3 min-h-[60px]">
               <AlertCircle className="h-5 w-5 text-error mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-base font-medium text-error">Login Failed</p>
-                <p className="text-base text-error mt-1">{error}</p>
+                <p className="text-base font-bold text-error">Login Failed</p>
+                <p className="text-base text-error mt-1">{error || 'An error occurred. Please try again.'}</p>
               </div>
             </div>
           )}

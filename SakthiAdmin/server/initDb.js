@@ -16,10 +16,14 @@ const initializeDatabase = async () => {
     if (!existingAdmin) {
       const adminUser = new User({
         email: 'admin@example.com',
-        password: 'admin123',
+        password: 'Sakthiadmin',
         name: 'Admin User',
         role: 'admin',
-        isActive: true
+        isActive: true,
+        employeeNumber: 'ADMIN001',
+        department: 'admin',
+        designation: 'Administrator',
+        mobileNumber: '+919095145230'
       });
       await adminUser.save();
       console.log('Admin user created successfully');
@@ -35,7 +39,11 @@ const initializeDatabase = async () => {
         password: 'reviewer123',
         name: 'Reviewer User',
         role: 'reviewer',
-        isActive: true
+        isActive: true,
+        employeeNumber: 'reviewer001',
+        department: 'admin',
+        designation: 'Administrator',
+        mobileNumber: '+916382914506'
       });
       await reviewerUser.save();
       console.log('Reviewer user created successfully');

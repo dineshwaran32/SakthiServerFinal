@@ -12,6 +12,7 @@
     "install:all": "npm install && cd SakthiAdmin && npm install && cd ../backend && npm install"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "concurrently": "^8.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

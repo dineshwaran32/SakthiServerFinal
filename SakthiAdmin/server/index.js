@@ -29,8 +29,7 @@ app.use('/app/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 // Middleware
 // CORS configuration for development - allow all origins on LAN/dev
 app.use(cors({
-  origin: true, // reflect request origin
-
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
