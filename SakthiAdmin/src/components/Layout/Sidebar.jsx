@@ -57,7 +57,14 @@ const Sidebar = ({ isOpen, onClose }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed left-0 top-16 h-screen w-64 bg-surface shadow-xl border-r border-background transform transition-transform duration-300 ease-in-out z-50 lg:relative lg:top-0 lg:translate-x-0 lg:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed left-0 top-0 h-screen w-64 bg-surface shadow-xl border-r border-background transform transition-transform duration-300 ease-in-out z-50 lg:relative lg:top-0 lg:translate-x-0 lg:z-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${isOpen ? '' : 'pointer-events-none lg:pointer-events-auto'}`}>
+        {/* Mobile Close Button */}
+        <div className="lg:hidden flex justify-end p-2">
+          <button onClick={onClose} className="p-2 rounded hover:bg-background focus:outline-none">
+            <span className="sr-only">Close sidebar</span>
+            <svg className="h-6 w-6 text-onSurface" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
         <div className="flex flex-col h-full">
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">

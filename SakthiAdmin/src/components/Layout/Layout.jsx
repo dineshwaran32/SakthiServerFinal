@@ -14,20 +14,18 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar 
         onMenuToggle={handleMenuToggle}
         isMobileMenuOpen={isMobileMenuOpen}
       />
-      
-      <div className="flex">
+      <div className="flex-1 flex flex-col lg:flex-row">
         <Sidebar 
           isOpen={isMobileMenuOpen}
           onClose={handleMenuClose}
         />
-        
-        <main className="flex-1">
-          <div className="p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 w-full min-w-0">
+          <div className="p-2 sm:p-4 md:p-6 lg:p-8 max-w-full">
             {children}
           </div>
         </main>

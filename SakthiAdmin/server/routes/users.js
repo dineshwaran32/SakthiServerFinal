@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -89,7 +90,11 @@ router.post('/bulk-upsert', authenticateToken, async (req, res) => {
 // Add route to update a user by ID
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    let data = { ...req.body };
+    if (data.password && (data.role === 'admin' || data.role === 'reviewer')) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+    const user = await User.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

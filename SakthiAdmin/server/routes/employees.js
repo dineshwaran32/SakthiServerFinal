@@ -3,6 +3,7 @@ import multer from 'multer';
 import XLSX from 'xlsx';
 import User from '../models/User.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
@@ -84,7 +85,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create new employee
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const employee = new User(req.body);
+    let data = { ...req.body };
+    if (data.password && (data.role === 'admin' || data.role === 'reviewer')) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+    const employee = new User(data);
     await employee.save();
     
     res.status(201).json(employee);
@@ -103,9 +108,13 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
 // Update employee
 router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    let data = { ...req.body };
+    if (data.password && (data.role === 'admin' || data.role === 'reviewer')) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
     const employee = await User.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      data,
       { new: true, runValidators: true }
     );
     
@@ -123,9 +132,13 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
 // Update employee by employeeNumber
 router.put('/by-employee-number/:employeeNumber', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    let data = { ...req.body };
+    if (data.password && (data.role === 'admin' || data.role === 'reviewer')) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
     const employee = await User.findOneAndUpdate(
       { employeeNumber: req.params.employeeNumber },
-      req.body,
+      data,
       { new: true, runValidators: true }
     );
     if (!employee) {

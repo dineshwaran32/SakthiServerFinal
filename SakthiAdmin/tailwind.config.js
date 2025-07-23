@@ -18,6 +18,7 @@ export default {
         onPrimary: 'var(--on-primary)',
         primaryContainer: 'var(--primary-container)',
         secondaryContainer: 'var(--secondary-container)',
+        logincontainer : 'var(--logincontainer)',
       },
     },
   },

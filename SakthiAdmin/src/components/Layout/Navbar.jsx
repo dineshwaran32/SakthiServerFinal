@@ -19,13 +19,13 @@ const Navbar = ({ onMenuToggle, isMobileMenuOpen }) => {
 
   return (
     <nav className="bg-background shadow-lg border-b border-background sticky top-0 z-50 text-onPrimary">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="px-2 sm:px-4 lg:px-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-16 gap-2 sm:gap-0">
           {/* Left side - Logo and Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-between">
             <button
               onClick={onMenuToggle}
-              className="lg:hidden p-2 rounded-md text-onPrimary hover:text-primary hover:bg-background transition-colors"
+              className="lg:hidden p-2 rounded-md text-onPrimary hover:text-primary hover:bg-background transition-colors focus:outline-none"
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -33,22 +33,20 @@ const Navbar = ({ onMenuToggle, isMobileMenuOpen }) => {
                 <Menu className="h-6 w-6" />
               )}
             </button>
-            
-            <div className="flex items-center space-x-3">
-              <img src={logo} alt="Sakthi Spark Logo" className="w-16 h-16 rounded-2xl object-contain" />
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-onPrimary">Sakthi Spark</h1>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <img src={logo} alt="Sakthi Spark Logo" className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-contain" />
+              <div className="hidden xs:block sm:block">
+                <h1 className="text-lg sm:text-xl font-bold text-onPrimary">Sakthi Spark</h1>
                 <p className="text-xs text-primary">Admin & Reviewer Dashboard</p>
               </div>
             </div>
           </div>
-
           {/* Right side - Notifications and User */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
             {/* Notifications */}
             <div className="relative">
               <button
-                className="relative p-2 rounded-lg text-onPrimary hover:text-primary hover:bg-background transition-colors"
+                className="relative p-2 rounded-lg text-onPrimary hover:text-primary hover:bg-background transition-colors focus:outline-none"
                 aria-label="Notifications"
                 onClick={() => setShowNotif(!showNotif)}
               >
@@ -58,7 +56,7 @@ const Navbar = ({ onMenuToggle, isMobileMenuOpen }) => {
                 )}
               </button>
               {showNotif && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 max-h-[32rem] overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 max-h-[32rem] overflow-y-auto">
                   <div className="px-6 py-3 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-xl">
                     <span className="font-semibold text-lg text-gray-900">Notifications</span>
                     <div className="flex items-center gap-3">
@@ -91,7 +89,7 @@ const Navbar = ({ onMenuToggle, isMobileMenuOpen }) => {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center space-x-3 p-2 rounded-lg text-onPrimary hover:text-primary hover:bg-background transition-colors"
+                className="flex items-center space-x-3 p-2 rounded-lg text-onPrimary hover:text-primary hover:bg-background transition-colors focus:outline-none"
               >
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-tertiary rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-onPrimary" />
