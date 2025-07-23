@@ -72,7 +72,7 @@ const corsOptions = {
   origin: true, // reflect origin for dev, allows LAN access
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Debug-Request', 'Accept', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Debug-Request', 'Accept', 'X-Requested-With', 'cache-control'],
   optionsSuccessStatus: 200
 };
 

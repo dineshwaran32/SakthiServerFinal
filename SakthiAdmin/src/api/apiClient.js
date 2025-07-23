@@ -1,12 +1,10 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-
-
-  baseURL: 'http://10.128.109.152:3002',
+  baseURL: 'http://10.75.46.152:8080', // Proxy server URL
   headers: {
     'Content-Type': 'application/json',
-    'Accept-Encoding': 'gzip, deflate, br', // Enable compression
+    // 'Accept-Encoding': 'gzip, deflate, br', // Removed forbidden header
   },
   withCredentials: true,
   timeout: 10000, // 10 second timeout to prevent hanging requests
