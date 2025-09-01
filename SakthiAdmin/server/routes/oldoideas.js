@@ -11,14 +11,6 @@ const router = express.Router();
 // Add new idea submission route
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    // Validate others description if "others" is selected
-    if (req.body.benefit === 'others' && (!req.body.othersDescription || !req.body.othersDescription.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: "Description is required when selecting 'others' as benefit",
-      });
-    }
-
     // Create new idea from request body
     const newIdea = new Idea({
       ...req.body,
@@ -31,8 +23,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Notify all admins only
     const admins = await User.find({ role: 'admin', isActive: true });
-    const notifTitle = `New Idea Submitted`;
-    const notifMsg = `${req.user.name} submitted a new idea: "${newIdea.title}"`;
+    const notifTitle = New Idea Submitted;
+    const notifMsg = ${req.user.name} submitted a new idea: "${newIdea.title}";
     for (const admin of admins) {
       await Notification.create({
         recipient: admin._id,
@@ -267,21 +259,21 @@ router.patch('/:id/status', authenticateToken, requireAdminOrReviewer, async (re
     let notifType = null;
     if (status === 'under_review' || status === 'ongoing') {
       notifType = 'idea_implementing';
-      notifTitle = `Idea Status Updated: ${idea.title}`;
-      notifMsg = `The status of the idea "${idea.title}" has changed to ${status}.`;
+      notifTitle = Idea Status Updated: ${idea.title};
+      notifMsg = The status of the idea "${idea.title}" has changed to ${status}.;
       // Notify Admins only
       const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     } else if (status === 'approved') {
       notifType = 'idea_approved';
-      notifTitle = `Idea Status Updated: ${idea.title}`;
-      notifMsg = `The status of the idea "${idea.title}" has changed to approved.`;
+      notifTitle = Idea Status Updated: ${idea.title};
+      notifMsg = The status of the idea "${idea.title}" has changed to approved.;
       const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     } else if (status === 'implemented') {
       notifType = 'idea_implemented';
-      notifTitle = `Idea Status Updated: ${idea.title}`;
-      notifMsg = `The status of the idea "${idea.title}" has changed to implemented.`;
+      notifTitle = Idea Status Updated: ${idea.title};
+      notifMsg = The status of the idea "${idea.title}" has changed to implemented.;
       const admins = await User.find({ role: 'admin', isActive: true }).select('_id name employeeNumber mobileNumber');
       recipients = [...admins];
     }
@@ -303,10 +295,10 @@ router.patch('/:id/status', authenticateToken, requireAdminOrReviewer, async (re
         try {
           await twilioService.customMessage(
             user.mobileNumber,
-            `Status Update: The idea "${idea.title}" has been changed to ${status}.`
+            Status Update: The idea "${idea.title}" has been changed to ${status}.
           );
         } catch (smsErr) {
-          console.error(`Failed to send SMS to admin ${user.name}:`, smsErr);
+          console.error(Failed to send SMS to admin ${user.name}:, smsErr);
         }
       }
     }
@@ -343,8 +335,8 @@ router.patch('/:id/assign-reviewer', authenticateToken, requireAdminOrReviewer, 
         recipient: reviewer._id,
         recipientEmployeeNumber: reviewer.employeeNumber,
         type: 'review_assigned',
-        title: `Idea Assigned: ${idea.title}`,
-        message: `The idea "${idea.title}" has been assigned to you for review.`,
+        title: Idea Assigned: ${idea.title},
+        message: The idea "${idea.title}" has been assigned to you for review.,
         relatedIdea: idea._id,
         isRead: false,
         priority: 'medium'
@@ -354,7 +346,7 @@ router.patch('/:id/assign-reviewer', authenticateToken, requireAdminOrReviewer, 
         try {
           await twilioService.customMessage(
             reviewer.mobileNumber,
-            `You have been assigned a new idea to review: "${idea.title} by admin"`
+            You have been assigned a new idea to review: "${idea.title} by admin"
           );
         } catch (smsErr) {
           console.error('Failed to send SMS to reviewer:', smsErr);

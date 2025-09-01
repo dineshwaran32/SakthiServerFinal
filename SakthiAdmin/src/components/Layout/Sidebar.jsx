@@ -103,15 +103,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </nav>
 
           {/* Footer */}
-          <div className="px-4 py-4 border-t border-background">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3">
-              <div className="text-sm font-medium text-onSurface">System Status</div>
-              <div className="flex items-center mt-1">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                <span className="ml-2 text-sm text-onSurfaceVariant">All systems operational</span>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </>

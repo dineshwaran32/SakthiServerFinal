@@ -95,66 +95,11 @@ const createIdea = async (req, res) => {
       }));
     }
 
-    // Normalize and validate incoming body
-    const allowedBenefits = ["cost_saving", "safety", "quality", "productivity", "others"];
-
-    // Support new client: may send benefits as CSV string or array under benefit/benefits
-    let incomingBenefits = [];
-    if (Array.isArray(req.body.benefits)) {
-      incomingBenefits = req.body.benefits;
-    } else if (typeof req.body.benefits === "string") {
-      incomingBenefits = req.body.benefits.split(",").map(s => s.trim()).filter(Boolean);
-    } else if (typeof req.body.benefit === "string") {
-      // Could be a single value or CSV serialized into benefit
-      incomingBenefits = req.body.benefit.split(",").map(s => s.trim()).filter(Boolean);
-    }
-
-    // Pick the first allowed benefit as the primary one (model requires a single enum)
-    const primaryBenefit = incomingBenefits.find(b => allowedBenefits.includes(b))
-      || (allowedBenefits.includes(req.body.benefit) ? req.body.benefit : undefined);
-
-    // Default department to user's department if missing, and normalize case to match enum
-    // Model enum uses lowercase department values
-    let department = req.body.department;
-    if (!department && req.user && req.user.department) {
-      department = String(req.user.department);
-    }
-    if (department) {
-      department = department.toString().toLowerCase();
-    }
-
-    // If we still don't have a valid primary benefit or department, return a 400
-    if (!primaryBenefit) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one valid benefit is required (cost_saving, safety, quality, productivity, others)",
-      });
-    }
-    
-    // Validate others description if "others" is selected
-    if (primaryBenefit === "others" && (!req.body.othersDescription || !req.body.othersDescription.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: "Description is required when selecting 'others' as benefit",
-      });
-    }
-    if (!department) {
-      return res.status(400).json({
-        success: false,
-        message: "Department is required",
-      });
-    }
-
     const ideaData = {
       ...req.body,
-      // Enforce model expectations
-      benefit: primaryBenefit,
-      department,
       submittedBy: req.user._id,
       submittedByEmployeeNumber: req.user.employeeNumber,
       images,
-      // Include others description if provided
-      ...(req.body.othersDescription && { othersDescription: req.body.othersDescription.trim() }),
     };
     // Remove imageUris if present
 
@@ -227,13 +172,6 @@ const createIdea = async (req, res) => {
     });
   } catch (error) {
     console.error("Create idea error:", error);
-    // Provide better feedback for validation errors
-    if (error && error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: Object.values(error.errors).map(e => e.message).join('; '),
-      });
-    }
     res.status(500).json({
       success: false,
       message: "Server error while creating idea",
@@ -468,85 +406,6 @@ const getIdeaStats = async (req, res) => {
   }
 };
 
-const getIdeasStats = async (req, res) => {
-  try {
-    // Get total ideas count
-    const totalIdeas = await Idea.countDocuments({ isActive: { $ne: false } });
-    
-    // Get ideas by status
-    const statusStats = await Idea.aggregate([
-      { $match: { isActive: { $ne: false } } },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-          totalSavings: { $sum: { $ifNull: ["$estimatedSavings", 0] } },
-        },
-      },
-    ]);
-
-    // Get ideas by department
-    const departmentStats = await Idea.aggregate([
-      { $match: { isActive: { $ne: false } } },
-      {
-        $group: {
-          _id: "$department",
-          count: { $sum: 1 },
-          totalSavings: { $sum: { $ifNull: ["$estimatedSavings", 0] } },
-        },
-      },
-    ]);
-
-    // Get ideas by benefit type
-    const benefitStats = await Idea.aggregate([
-      { $match: { isActive: { $ne: false } } },
-      {
-        $group: {
-          _id: "$benefit",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Get recent ideas (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const recentIdeas = await Idea.countDocuments({
-      createdAt: { $gte: thirtyDaysAgo },
-      isActive: { $ne: false }
-    });
-
-    // Get total estimated savings
-    const totalSavings = await Idea.aggregate([
-      { $match: { isActive: { $ne: false } } },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: { $ifNull: ["$estimatedSavings", 0] } },
-        },
-      },
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        totalIdeas,
-        statusStats,
-        departmentStats,
-        benefitStats,
-        recentIdeas,
-        totalSavings: totalSavings[0]?.total || 0,
-      },
-    });
-  } catch (error) {
-    console.error("Get ideas stats error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching dashboard statistics",
-    });
-  }
-};
-
 const updateIdea = async (req, res) => {
   try {
     const allowedFields = [
@@ -635,7 +494,6 @@ module.exports = {
   getIdeaById,
   updateIdeaStatus,
   getIdeaStats,
-  getIdeasStats,
   updateIdea,
   deleteIdea,
 };

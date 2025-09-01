@@ -22,7 +22,12 @@ const ideaSchema = new mongoose.Schema({
   benefit: {
     type: String,
     required: true,
-    enum: ['cost_saving', 'safety', 'quality', 'productivity']
+    enum: ['cost_saving', 'safety', 'quality', 'productivity', 'others']
+  },
+  othersDescription: {
+    type: String,
+    trim: true,
+    maxlength: 1000
   },
   estimatedSavings: {
     type: Number,
@@ -30,8 +35,7 @@ const ideaSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: true,
-    enum: ['engineering', 'quality', 'manufacturing', 'management', 'administration', 'hr', 'finance']
+    required: true
   },
   submittedBy: {
     type: mongoose.Schema.Types.ObjectId,

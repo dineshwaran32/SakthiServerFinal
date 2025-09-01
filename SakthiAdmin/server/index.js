@@ -32,7 +32,7 @@ app.use(cors({
   origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control'],
   exposedHeaders: ['Content-Range', 'X-Total-Count'],
   maxAge: 600, // Cache preflight for 10 minutes
   optionsSuccessStatus: 204 // Some legacy browsers choke on 204

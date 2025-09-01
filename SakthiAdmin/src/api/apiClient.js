@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://10.75.46.152:8080', // Proxy server URL
+  baseURL: 'http://10.185.169.152:8080', // Proxy server URL
   headers: {
     'Content-Type': 'application/json',
     // 'Accept-Encoding': 'gzip, deflate, br', // Removed forbidden header

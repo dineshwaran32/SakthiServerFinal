@@ -21,6 +21,10 @@ const ideaSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  othersDescription: {
+    type: String,
+    trim: true
+  },
   estimatedSavings: {
     type: Number,
     default: 0,
