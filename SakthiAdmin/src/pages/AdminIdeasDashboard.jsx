@@ -477,7 +477,7 @@ const AdminIdeasDashboard = () => {
                             {selectedIdea.images.map((img, idx) => (
                               <div key={idx} className="border rounded-lg p-2 bg-white shadow-sm">
                                 <img
-                                  src={`http://118.91.235.74:80/backend/uploads/${img.filename}`}
+                                  src={`http://10.185.169.152:80/backend/uploads/${img.filename}`}
                                   alt={img.originalName || `Idea Image ${idx + 1}`}
                                   className="w-32 h-32 object-cover rounded mb-1 cursor-pointer"
                                   style={{ maxWidth: '128px', maxHeight: '128px' }}
@@ -652,7 +652,7 @@ const AdminIdeasDashboard = () => {
         <div className="fixed inset-0 z-[100] bg-black bg-opacity-70 flex items-center justify-center p-2 sm:p-4">
           <div className="relative bg-background rounded-lg shadow-2xl p-2 sm:p-4 max-w-full sm:max-w-3xl w-full max-h-[80vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
             <img
-              src={`http://118.91.235.74:80/backend/uploads/${fullscreenImage.filename}`}
+              src={`http://10.185.169.152:80/backend/uploads/${fullscreenImage.filename}`}
               alt={fullscreenImage.originalName || 'Full Image'}
               className="max-w-full max-h-[65vh] rounded"
               style={{ objectFit: 'contain' }}

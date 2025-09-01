@@ -58,10 +58,28 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Login failed. Please check your credentials and try again.'
-      };
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 'Login failed. Please check your credentials and try again.';
+        return {
+          success: false,
+          message: errorMessage
+        };
+      } else if (error.request) {
+        // Network error
+        return {
+          success: false,
+          message: 'Network error. Please check your internet connection and try again.'
+        };
+      } else {
+        // Other errors
+        return {
+          success: false,
+          message: 'An unexpected error occurred. Please try again.'
+        };
+      }
     }
   };
 

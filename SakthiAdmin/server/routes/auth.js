@@ -12,25 +12,36 @@ router.post('/login', async (req, res) => {
   try {
     const { employeeNumber, password } = req.body;
 
+    console.log('Login attempt:', { employeeNumber, password: password ? '***' : 'undefined' });
+
     if (!employeeNumber || !password) {
       return res.status(400).json({ message: 'Employee number and password are required' });
     }
 
     const user = await User.findOne({ employeeNumber, isActive: true });
+    console.log('User found:', user ? { 
+      employeeNumber: user.employeeNumber, 
+      role: user.role, 
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0
+    } : 'Not found');
+    
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid employee number or password' });
     }
 
     // Only allow login for admin and reviewer
     if (user.role === 'employee') {
-      return res.status(401).json({ message: 'Login not allowed for employees' });
+      return res.status(401).json({ message: 'Access denied. Only administrators and reviewers can access this portal.' });
     }
 
     // Password check logic
     if (user.role === 'admin' || user.role === 'reviewer') {
+      console.log('Comparing passwords...');
       const isMatch = await bcrypt.compare(password, user.password || '');
+      console.log('Password match result:', isMatch);
       if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: 'Invalid employee number or password' });
       }
     }
 

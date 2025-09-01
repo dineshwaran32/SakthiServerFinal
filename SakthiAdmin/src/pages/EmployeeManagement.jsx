@@ -203,32 +203,96 @@ const EmployeeManagement = () => {
 
   const handleImport = async (e) => {
     e.preventDefault();
-    if (!importFile) return;
+    if (!importFile) {
+      showAlert('error', 'Please select a file to upload');
+      return;
+    }
+
+    // Validate file type on frontend
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'application/vnd.ms-excel.sheet.macroEnabled.12'
+    ];
+    if (!allowedTypes.includes(importFile.type)) {
+      showAlert('error', 'Please select a valid Excel file (.xlsx or .xls)');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+    if (importFile.size > maxFileSize) {
+      showAlert('error', 'File size must be less than 10MB');
+      return;
+    }
 
     try {
       setImportLoading(true);
+      setImportResults(null); // Clear previous results
+      
       const formData = new FormData();
       formData.append('file', importFile);
-      console.log(formData);
 
       const response = await apiClient.post('/api/admin/employees/bulk-import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000 // 60 second timeout for large files
       });
 
-      setImportResults({
-        success: true,
-        message: response.data.message,
-        count: response.data.employees?.length || 0
-      });
+      // Handle successful response
+      if (response.data.success) {
+        setImportResults({
+          success: true,
+          message: response.data.message,
+          summary: response.data.summary,
+          successes: response.data.successes || [],
+          errors: response.data.errors || [],
+          warnings: response.data.warnings || [],
+          count: response.data.employees?.length || 0
+        });
+        
+        // Show appropriate alert based on results
+        if (response.data.summary.failed === 0) {
+          showAlert('success', response.data.message);
+        } else if (response.data.summary.succeeded > 0) {
+          showAlert('warning', `Import completed with ${response.data.summary.failed} errors. Check details below.`);
+        } else {
+          showAlert('error', 'Import failed. All rows had errors.');
+        }
+        
+        // Refresh the employee list
+        await fetchEmployees();
+      } else {
+        // Handle server-side validation errors
+        setImportResults({
+          success: false,
+          message: response.data.message,
+          errors: response.data.errors || []
+        });
+        showAlert('error', response.data.message);
+      }
       
-      fetchEmployees(); // Refresh the list
-      showAlert('success', response.data.message);
     } catch (error) {
+      console.error('Import error:', error);
+      
+      let errorMessage = 'Import failed';
+      let errorDetails = [];
+      
+      if (error.response?.data) {
+        errorMessage = error.response.data.message || errorMessage;
+        errorDetails = error.response.data.errors || [];
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Import timeout. Please try with a smaller file.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setImportResults({
         success: false,
-        message: error.response?.data?.message || 'Import failed',
-        errors: error.response?.data?.errors || []
+        message: errorMessage,
+        errors: errorDetails
       });
+      
+      showAlert('error', errorMessage);
     } finally {
       setImportLoading(false);
     }
@@ -312,7 +376,26 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleDownloadTemplate = async () => {
+  const handleDownloadInsertTemplate = async () => {
+    try {
+      const response = await apiClient.get('/api/admin/employees/bulk-insert-template', {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'bulk-insert-template.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showAlert('success', 'Bulk insert template downloaded successfully!');
+    } catch (error) {
+      showAlert('error', 'Failed to download insert template');
+    }
+  };
+
+  const handleDownloadDeleteTemplate = async () => {
     try {
       const response = await apiClient.get('/api/admin/employees/bulk-delete-template', {
         responseType: 'blob'
@@ -327,7 +410,7 @@ const EmployeeManagement = () => {
       link.remove();
       showAlert('success', 'Bulk delete template downloaded successfully!');
     } catch (error) {
-      showAlert('error', 'Failed to download template');
+      showAlert('error', 'Failed to download delete template');
     }
   };
 
@@ -801,19 +884,20 @@ const EmployeeManagement = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-base font-medium text-gray-700 mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={employeeForm.mobileNumber}
-                    onChange={(e) => setEmployeeForm(prev => ({ ...prev, mobileNumber: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter phone number"
-                  />
-                </div>
+                                 <div>
+                   <label className="block text-base font-medium text-gray-700 mb-2">
+                     Phone Number *
+                   </label>
+                   <input
+                     type="tel"
+                     required
+                     value={employeeForm.mobileNumber}
+                     onChange={(e) => setEmployeeForm(prev => ({ ...prev, mobileNumber: e.target.value }))}
+                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="e.g., 9876543210 or +919876543210"
+                   />
+                   <p className="text-xs text-gray-500 mt-1">+91 will be automatically added if not present</p>
+                 </div>
 
                 <div>
                   <label className="block text-base font-medium text-gray-700 mb-2">
@@ -972,7 +1056,9 @@ const EmployeeManagement = () => {
                     value={employeeForm.mobileNumber}
                     onChange={(e) => setEmployeeForm(prev => ({ ...prev, mobileNumber: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 9876543210 or +919876543210"
                   />
+                  <p className="text-xs text-gray-500 mt-1">+91 will be automatically added if not present</p>
                 </div>
 
                 <div>
@@ -1042,25 +1128,38 @@ const EmployeeManagement = () => {
       {/* Import Modal */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-lg max-w-full sm:max-w-lg w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Import Employees</h2>
-                <button onClick={() => setShowImportModal(false)}><X className="h-6 w-6" /></button>
-              </div>
+          <div className="bg-white rounded-lg max-w-full sm:max-w-2xl w-full max-h-[90vh] flex flex-col">
+            {/* Fixed Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-2xl font-bold text-gray-900">Import Employees</h2>
+              <button onClick={() => setShowImportModal(false)}><X className="h-6 w-6" /></button>
+            </div>
 
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1">
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-blue-900 mb-2">Excel Format Requirements</h4>
                   <ul className="text-xs text-blue-800 space-y-1">
-                    <li>• Employee Number (required)</li>
-                    <li>• Name (required)</li>
-                    <li>• Email (required)</li>
-                    <li>• Department (required)</li>
-                    <li>• Designation (required)</li>
-                    <li>• Phone Number (required)</li>
-                    <li>• Credit Points (optional, default: 0)</li>
+                    <li>• employeeNumber (required)</li>
+                    <li>• name (required)</li>
+                    <li>• email (required)</li>
+                    <li>• department (required)</li>
+                    <li>• designation (required)</li>
+                    <li>• mobileNumber (required, will auto-add +91 if not present)</li>
+                    <li>• role (required , employee, reviewer, admin)</li>
                   </ul>
+                </div>
+
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleDownloadInsertTemplate}
+                    className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-base font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Insert Template
+                  </button>
                 </div>
 
                 <form onSubmit={handleImport}>
@@ -1083,17 +1182,90 @@ const EmployeeManagement = () => {
                         ? 'bg-green-50 border-green-200' 
                         : 'bg-red-50 border-red-200'
                     }`}>
-                      <p className={`text-base font-medium ${
-                        importResults.success ? 'text-green-800' : 'text-red-800'
-                      }`}>
-                        {importResults.message}
-                      </p>
+                      <div className="flex items-center mb-3">
+                        {importResults.success ? (
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                        )}
+                        <p className={`text-base font-medium ${
+                          importResults.success ? 'text-green-800' : 'text-red-800'
+                        }`}>
+                          {importResults.message}
+                        </p>
+                      </div>
+
+                      {/* Summary Statistics */}
+                      {importResults.summary && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-white p-3 rounded-lg border">
+                            <div className="text-2xl font-bold text-blue-600">{importResults.summary.total}</div>
+                            <div className="text-sm text-gray-600">Total Rows</div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border">
+                            <div className="text-2xl font-bold text-green-600">{importResults.summary.succeeded}</div>
+                            <div className="text-sm text-gray-600">Succeeded</div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border">
+                            <div className="text-2xl font-bold text-red-600">{importResults.summary.failed}</div>
+                            <div className="text-sm text-gray-600">Failed</div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border">
+                            <div className="text-2xl font-bold text-yellow-600">{importResults.summary.warnings || 0}</div>
+                            <div className="text-sm text-gray-600">Warnings</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Success Messages */}
+                      {importResults.successes && importResults.successes.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-green-800 mb-2">Successful Imports:</h4>
+                          <div className="max-h-60 overflow-y-auto bg-white p-3 rounded border scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <ul className="text-xs text-green-700 space-y-1">
+                              {importResults.successes.map((success, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-green-600 mr-2 mt-0.5 flex-shrink-0">✓</span>
+                                  <span className="break-words">{success}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Warning Messages */}
+                      {importResults.warnings && importResults.warnings.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-yellow-800 mb-2">Warnings:</h4>
+                          <div className="max-h-40 overflow-y-auto bg-white p-3 rounded border scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <ul className="text-xs text-yellow-700 space-y-1">
+                              {importResults.warnings.map((warning, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-yellow-600 mr-2 mt-0.5 flex-shrink-0">⚠</span>
+                                  <span className="break-words">{warning}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error Messages */}
                       {importResults.errors && importResults.errors.length > 0 && (
-                        <ul className="mt-2 text-xs text-red-700 space-y-1">
-                          {importResults.errors.map((error, index) => (
-                            <li key={index}>• {error}</li>
-                          ))}
-                        </ul>
+                        <div>
+                          <h4 className="text-sm font-medium text-red-800 mb-2">Errors:</h4>
+                          <div className="max-h-40 overflow-y-auto bg-white p-3 rounded border scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <ul className="text-xs text-red-700 space-y-1">
+                              {importResults.errors.map((error, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-red-600 mr-2 mt-0.5 flex-shrink-0">✗</span>
+                                  <span className="break-words">{error}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -1138,12 +1310,15 @@ const EmployeeManagement = () => {
       {/* Bulk Delete Modal */}
       {showBulkDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-lg max-w-full sm:max-w-lg w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-red-900">Bulk Delete Employees</h2>
-                <button onClick={() => setShowBulkDeleteModal(false)}><X className="h-6 w-6" /></button>
-              </div>
+          <div className="bg-white rounded-lg max-w-full sm:max-w-lg w-full max-h-[90vh] flex flex-col">
+            {/* Fixed Header */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
+              <h2 className="text-2xl font-bold text-red-900">Bulk Delete Employees</h2>
+              <button onClick={() => setShowBulkDeleteModal(false)}><X className="h-6 w-6" /></button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto flex-1">
 
               <div className="space-y-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -1160,11 +1335,11 @@ const EmployeeManagement = () => {
                 <div className="flex justify-center">
                   <button
                     type="button"
-                    onClick={handleDownloadTemplate}
+                    onClick={handleDownloadDeleteTemplate}
                     className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-base font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download Template
+                    Download Delete Template
                   </button>
                 </div>
 
@@ -1197,13 +1372,13 @@ const EmployeeManagement = () => {
                       {bulkDeleteResults.successes && bulkDeleteResults.successes.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs font-medium text-green-700 mb-1">Successfully deleted:</p>
-                          <ul className="text-xs text-green-700 space-y-1 max-h-20 overflow-y-auto">
-                            {bulkDeleteResults.successes.slice(0, 5).map((success, index) => (
-                              <li key={index}>• {success}</li>
+                          <ul className="text-xs text-green-700 space-y-1 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {bulkDeleteResults.successes.map((success, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-green-600 mr-2 mt-0.5 flex-shrink-0">✓</span>
+                                <span className="break-words">{success}</span>
+                              </li>
                             ))}
-                            {bulkDeleteResults.successes.length > 5 && (
-                              <li>... and {bulkDeleteResults.successes.length - 5} more</li>
-                            )}
                           </ul>
                         </div>
                       )}
@@ -1211,13 +1386,13 @@ const EmployeeManagement = () => {
                       {bulkDeleteResults.notFound && bulkDeleteResults.notFound.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs font-medium text-yellow-700 mb-1">Not found:</p>
-                          <ul className="text-xs text-yellow-700 space-y-1 max-h-20 overflow-y-auto">
-                            {bulkDeleteResults.notFound.slice(0, 5).map((notFound, index) => (
-                              <li key={index}>• {notFound}</li>
+                          <ul className="text-xs text-yellow-700 space-y-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {bulkDeleteResults.notFound.map((notFound, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-yellow-600 mr-2 mt-0.5 flex-shrink-0">⚠</span>
+                                <span className="break-words">{notFound}</span>
+                              </li>
                             ))}
-                            {bulkDeleteResults.notFound.length > 5 && (
-                              <li>... and {bulkDeleteResults.notFound.length - 5} more</li>
-                            )}
                           </ul>
                         </div>
                       )}
@@ -1225,13 +1400,13 @@ const EmployeeManagement = () => {
                       {bulkDeleteResults.errors && bulkDeleteResults.errors.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs font-medium text-red-700 mb-1">Errors:</p>
-                          <ul className="text-xs text-red-700 space-y-1 max-h-20 overflow-y-auto">
-                            {bulkDeleteResults.errors.slice(0, 5).map((error, index) => (
-                              <li key={index}>• {error}</li>
+                          <ul className="text-xs text-red-700 space-y-1 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            {bulkDeleteResults.errors.map((error, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="text-red-600 mr-2 mt-0.5 flex-shrink-0">✗</span>
+                                <span className="break-words">{error}</span>
+                              </li>
                             ))}
-                            {bulkDeleteResults.errors.length > 5 && (
-                              <li>... and {bulkDeleteResults.errors.length - 5} more</li>
-                            )}
                           </ul>
                         </div>
                       )}

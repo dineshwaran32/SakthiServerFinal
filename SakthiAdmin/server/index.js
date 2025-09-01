@@ -91,10 +91,77 @@ const initializeApp = async () => {
   isDbConnected = await connectToMongoDB();
   setupRoutes();
   
-  // Error handling middleware
+  // Global error handling middleware
   app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something went wrong!' });
+    console.error('Global error handler:', err);
+    
+    // Handle specific error types
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation Error',
+        errors: Object.values(err.errors).map(e => e.message)
+      });
+    }
+    
+    if (err.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid data format',
+        errors: ['Invalid data type provided']
+      });
+    }
+    
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Duplicate entry',
+        errors: ['A record with this information already exists']
+      });
+    }
+    
+    if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+      return res.status(503).json({
+        success: false,
+        message: 'Database error',
+        errors: ['Database connection issue. Please try again later.']
+      });
+    }
+    
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large',
+        errors: ['Uploaded file exceeds size limit']
+      });
+    }
+    
+    if (err.code === 'ENOENT') {
+      return res.status(400).json({
+        success: false,
+        message: 'File not found',
+        errors: ['The requested file could not be found']
+      });
+    }
+    
+    // Default error response
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      errors: ['An unexpected error occurred. Please try again later.']
+    });
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    // Don't exit the process, just log the error
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit the process, just log the error
   });
 
   // Add this after all other routes

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,8 @@ const Login = () => {
   const [error, setError] = useState('');
 
   const { login, isAuthenticated } = useAuth();
+
+
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -31,6 +33,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form data
+    if (!formData.employeeNumber.trim() || !formData.password.trim()) {
+      setError('Please enter both employee number and password');
+      return;
+    }
+    
     console.log('Form submitted with:', formData);
     setLoading(true);
     setError('');
@@ -38,8 +47,10 @@ const Login = () => {
     try {
       const result = await login(formData.employeeNumber, formData.password);
       console.log('Login result:', result);
+      
       if (!result.success) {
-        setError(result.message);
+        console.log('Setting error message:', result.message);
+        setError(result.message || 'Login failed. Please check your credentials and try again.');
       }
     } catch (err) {
       console.error('Login error in component:', err);
@@ -67,13 +78,24 @@ const Login = () => {
 
         {/* Login Form */}
         <div className="bg-surface rounded-2xl shadow-xl p-8 space-y-6">
-          {(() => { if (error) console.log('Login error value:', error); return null; })()}
+          
           {error && (
-            <div className="bg-error bg-opacity-10 border border-error rounded-lg p-4 flex items-start space-x-3 min-h-[60px]">
-              <AlertCircle className="h-5 w-5 text-error mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-base font-bold text-error">Login Failed</p>
-                <p className="text-base text-error mt-1">{error || 'An error occurred. Please try again.'}</p>
+            <div 
+              className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-start space-x-3 min-h-[60px] shadow-sm" 
+              style={{
+                backgroundColor: '#fef2f2', 
+                borderColor: '#fca5a5',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              }}
+            >
+              <AlertCircle className="h-6 w-6 text-red-500 mt-0.5 flex-shrink-0" style={{color: '#ef4444'}} />
+              <div className="flex-1">
+                <p className="text-base font-semibold text-red-800 mb-1" style={{color: '#991b1b'}}>
+                  Login Failed
+                </p>
+                <p className="text-sm text-red-700 leading-relaxed" style={{color: '#b91c1c'}}>
+                  {error}
+                </p>
               </div>
             </div>
           )}
