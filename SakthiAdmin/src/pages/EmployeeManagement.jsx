@@ -235,7 +235,7 @@ const EmployeeManagement = () => {
 
       const response = await apiClient.post('/api/admin/employees/bulk-import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000 // 60 second timeout for large files
+        timeout: 300000 // 5 minute timeout for larger files
       });
 
       // Handle successful response

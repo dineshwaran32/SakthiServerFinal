@@ -308,7 +308,7 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
           errors: ['File size must be less than 10MB']
         });
       }
-      if (err.message.includes('Invalid file type')) {
+      if (typeof err.message === 'string' && err.message.includes('Invalid file type')) {
         return res.status(400).json({
           success: false,
           message: 'Invalid file type',
@@ -318,7 +318,7 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
       return res.status(400).json({
         success: false,
         message: 'Upload failed',
-        errors: [err.message]
+        errors: [typeof err.message === 'string' ? err.message : 'Unknown upload error']
       });
     }
     next();
@@ -386,6 +386,50 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
       
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
+
+      // Validate header row strictly against the required template
+      const headerRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      const header = Array.isArray(headerRows) && headerRows.length > 0 ? headerRows[0] : [];
+      const normalizedHeader = header.map(h => String(h).trim());
+      // Tolerate trailing empty header cells (common in exported templates)
+      while (normalizedHeader.length > 0 && normalizedHeader[normalizedHeader.length - 1] === '') {
+        normalizedHeader.pop();
+      }
+      const requiredHeader = [
+        'employeeNumber',
+        'name',
+        'email',
+        'department',
+        'designation',
+        'role',
+        'mobileNumber'
+      ];
+
+      const headersMatch = requiredHeader.length === normalizedHeader.length &&
+        requiredHeader.every((col, idx) => col === normalizedHeader[idx]);
+
+      if (!headersMatch) {
+        try {
+          if (uploadedFilePath) {
+            const fs = await import('fs');
+            if (fs.existsSync(uploadedFilePath)) {
+              fs.unlinkSync(uploadedFilePath);
+            }
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up uploaded file on header mismatch:', cleanupError);
+        }
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid Excel header format',
+          errors: [
+            `Header row must exactly be: ${requiredHeader.join(', ')}`,
+            `Received: ${normalizedHeader.join(', ') || 'No headers found'}`
+          ]
+        });
+      }
+
+      // Parse data rows after header validation
       data = XLSX.utils.sheet_to_json(worksheet);
       
       if (!data || data.length === 0) {
@@ -419,6 +463,22 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
     const successes = [];
     const errors = [];
     const warnings = [];
+
+    // Prefetch existing users to avoid per-row lookups (performance)
+    const importEmployeeNumbers = Array.from(new Set(data
+      .map(r => String((r.employeeNumber || r['Employee Number'] || '')).trim())
+      .filter(v => v)));
+    const importEmails = Array.from(new Set(data
+      .map(r => String((r.email || r['Email'] || '')).trim().toLowerCase())
+      .filter(v => v)));
+
+    const [existingByEmpNumDocs, existingByEmailDocs] = await Promise.all([
+      importEmployeeNumbers.length ? User.find({ employeeNumber: { $in: importEmployeeNumbers } }).lean() : [],
+      importEmails.length ? User.find({ email: { $in: importEmails } }).lean() : []
+    ]);
+
+    const existingByEmpNumMap = new Map(existingByEmpNumDocs.map(u => [String(u.employeeNumber), u]));
+    const emailToEmpNumMap = new Map(existingByEmailDocs.map(u => [String(u.email).toLowerCase(), String(u.employeeNumber)]));
 
     // Process each row with comprehensive error handling
     for (let i = 0; i < data.length; i++) {
@@ -498,16 +558,16 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
           continue;
         }
 
-        // Check for duplicate email (with different employeeNumber)
-        const existingByEmail = await User.findOne({ email: employeeData.email });
-        if (existingByEmail && existingByEmail.employeeNumber !== employeeData.employeeNumber) {
-          errors.push(`Row ${i + 2}: Email already exists for employee ${existingByEmail.employeeNumber}`);
+        // Check for duplicate email (with different employeeNumber) using preloaded maps
+        const mappedEmpForEmail = emailToEmpNumMap.get(employeeData.email);
+        if (mappedEmpForEmail && mappedEmpForEmail !== employeeData.employeeNumber) {
+          errors.push(`Row ${i + 2}: Email already exists for employee ${mappedEmpForEmail}`);
           continue;
         }
 
-        // Check for duplicate employee number
-        const existingByEmpNum = await User.findOne({ employeeNumber: employeeData.employeeNumber });
-        if (existingByEmpNum && existingByEmpNum.email !== employeeData.email) {
+        // Check for duplicate employee number with conflicting email using preloaded map
+        const mappedEmpDoc = existingByEmpNumMap.get(employeeData.employeeNumber);
+        if (mappedEmpDoc && String(mappedEmpDoc.email).toLowerCase() !== employeeData.email) {
           errors.push(`Row ${i + 2}: Employee Number already exists for different email`);
           continue;
         }
@@ -529,8 +589,12 @@ router.post('/bulk-import', authenticateToken, requireAdmin, (req, res, next) =>
         );
 
         results.push(updated);
-        const action = existingByEmpNum ? 'Updated' : 'Created';
+        const action = existingByEmpNumMap.has(employeeData.employeeNumber) ? 'Updated' : 'Created';
         successes.push(`Row ${i + 2}: ${action} employee ${employeeData.name} (${employeeData.employeeNumber})`);
+
+        // Update local maps to reflect this change for subsequent rows
+        existingByEmpNumMap.set(employeeData.employeeNumber, updated);
+        emailToEmpNumMap.set(employeeData.email, employeeData.employeeNumber);
 
       } catch (error) {
         console.error(`Error processing row ${i + 2}:`, error);
